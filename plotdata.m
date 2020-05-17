@@ -83,3 +83,8 @@ saveas(nAllfig ,'images/nAlltimeseries', 'jpg');
 pdAllfig = figure('units','normalized','outerposition',[0 0 1 1]);
 stackedplot(pdAll);
 saveas(pdAllfig ,'images/pdAlltimeseries', 'jpg');
+
+%% Normalize data into [-1, 1]
+rng default;
+nAllnorm = normalize(nAll, 'range', [-1 1]);
+pdAllnorm = normalize(pdAll, 'range', [-1 1]);
