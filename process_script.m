@@ -33,7 +33,7 @@ for j=1:size(names,1)
         
         % Task No4 , bandpower examples use signal in time domain
         % No4 : Calculate bands power ratios'  mean and std value
-        [mean_band_powers(:,i,j), std_band_powers(:,i,j)] = task4(data,Fs) ;
+        [mean_band_powers(:,i,j), std_band_powers(:,i,j)] = task4(data,Fs);
         
         data = abs(fft(data)); % calculate the amplitude of fft
         %data = data(1:end/2,:); % discard half to dump images of frequencies around Nyquist freq. (Fnyq = Fs/2)
