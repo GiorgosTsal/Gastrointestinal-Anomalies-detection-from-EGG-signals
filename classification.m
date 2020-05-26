@@ -91,6 +91,7 @@ X = [avg_power; std_power; avg_main_freq; std_freq; main_power_ratio; total_max_
 
 X = X';
 y = y';
+X = normalize(X);
 
 per = 0.6;
 rand_num = randperm(size(X,1));
@@ -99,26 +100,53 @@ y_train = y(rand_num(1:round(per*length(rand_num))),:);
 
 X_test = X(rand_num(round(per*length(rand_num))+1:end),:);
 y_test = y(rand_num(round(per*length(rand_num))+1:end),:);
-%% CV partition
+% %% CV partition
+% 
+% c = cvpartition(y_train,'k',5);
+% %% feature selection
+% nfeat = 4;
+% opts = statset('display','iter');
+% classf = @(train_data, train_labels, test_data, test_labels)...
+%     sum(predict(fitcsvm(train_data, train_labels,'KernelFunction','rbf'), test_data) ~= test_labels); % how wrong the prediction was
+% 
+% [fs, history] = sequentialfs(classf, X_train, y_train, 'cv', c, 'options', opts,'nfeatures', nfeat);
+% %% Best hyperparameter
+% 
+% X_train_w_best_feature = X_train(:,fs);
+% 
+% Md1 = fitcsvm(X_train_w_best_feature,y_train,'KernelFunction','rbf','OptimizeHyperparameters','auto',...
+%       'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName',...
+%       'expected-improvement-plus','ShowPlots',true)); % Bayes' Optimization 
+% %% %% Evaluate model, final test with test set
+% X_test_w_best_feature = X_test(:,fs);
+% yhat =  predict(Md1,X_test_w_best_feature);
+% test_accuracy_for_iter = sum(yhat == y_test)/length(y_test)*100;
+% disp("Test accuracy:" + test_accuracy_for_iter);
+% 
+% cm = confusionmat(y_test,yhat); % confusion matrix
+% figure;
+% confusionchart(cm);
 
-c = cvpartition(y_train,'k',5);
-%% feature selection
-nfeat = 4;
-opts = statset('display','iter');
-classf = @(train_data, train_labels, test_data, test_labels)...
-    sum(predict(fitcsvm(train_data, train_labels,'KernelFunction','rbf'), test_data) ~= test_labels); % how wrong the prediction was
 
-[fs, history] = sequentialfs(classf, X_train, y_train, 'cv', c, 'options', opts,'nfeatures', nfeat);
-%% Best hyperparameter
+%% PCA
 
-X_train_w_best_feature = X_train(:,fs);
+nfeat =4;
+[COEFF, SCORE, LATENT, TSQUARED, EXPLAINED, MU] = pca(X_train)
+[out,idx] = sort(MU, 'descend');
+disp("======================");
+disp(out);
+disp(idx);
+for i= 1:nfeat
+    X_train_new(:,i) = X_train(:,idx(i));
+     X_test_new(:,i) = X_test(:,idx(i));
+end
+X_train = X_train_new;
+X_test = X_test_new;
+%% descision trees
 
-Md1 = fitcsvm(X_train_w_best_feature,y_train,'KernelFunction','rbf','OptimizeHyperparameters','auto',...
-      'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName',...
-      'expected-improvement-plus','ShowPlots',true)); % Bayes' Optimization 
-%% %% Evaluate model, final test with test set
-X_test_w_best_feature = X_test(:,fs);
-yhat =  predict(Md1,X_test_w_best_feature);
+Mdl = fitctree(X_train,y_train);
+
+yhat =  predict(Mdl,X_test);
 test_accuracy_for_iter = sum(yhat == y_test)/length(y_test)*100;
 disp("Test accuracy:" + test_accuracy_for_iter);
 
