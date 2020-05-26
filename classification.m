@@ -91,7 +91,9 @@ X = [avg_power; std_power; avg_main_freq; std_freq; main_power_ratio; total_max_
 
 X = X';
 y = y';
-X = normalize(X);
+
+%X = normalize(X);
+%X = (X - min(X))/(max(X) - min(X));
 
 per = 0.6;
 rand_num = randperm(size(X,1));
