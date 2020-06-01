@@ -92,8 +92,6 @@ X = [avg_power; std_power; avg_main_freq; std_freq; main_power_ratio; total_max_
 X = X';
 y = y';
 
-%X = normalize(X);
-%X = (X - min(X))/(max(X) - min(X));
 
 per = 0.65; 
 rand_num = randperm(size(X,1));
@@ -106,20 +104,20 @@ y_test = y(rand_num(round(per*length(rand_num))+1:end),:);
 
 c = cvpartition(y_train,'k',5);
 %% feature selection
-nfeat = 10;
+% nfeat = 2;
 opts = statset('display','iter');
 classf = @(train_data, train_labels, test_data, test_labels)...
     sum(predict(fitcsvm(train_data, train_labels,'KernelFunction','rbf'), test_data) ~= test_labels); % how wrong the prediction was
 
- [fs, history] = sequentialfs(classf, X_train, y_train, 'cv', c, 'options', opts,'nfeatures', nfeat);
+%  [fs, history] = sequentialfs(classf, X_train, y_train, 'cv', c, 'options', opts,'nfeatures', nfeat);
 
-% [fs, history] = sequentialfs(classf, X_train, y_train, 'cv', c, ...
-% 'options', opts); %  % should stop when a local minimum of the criterion is found.
+[fs, history] = sequentialfs(classf, X_train, y_train, 'cv', c, ...
+'options', opts); %  % should stop when a local minimum of the criterion is found.
 %% Best hyperparameter
 
 X_train_w_best_feature = X_train(:,fs);
 
-Md1 = fitcsvm(X_train_w_best_feature,y_train,'KernelFunction','rbf','OptimizeHyperparameters','auto',...
+Md1 = fitcsvm(X_train_w_best_feature,y_train,'KernelFunction','rbf','OptimizeHyperparameters','all',...
       'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName',...
       'expected-improvement-plus','ShowPlots',true)); % Bayes' Optimization 
 %% %% Evaluate model, final test with test set
