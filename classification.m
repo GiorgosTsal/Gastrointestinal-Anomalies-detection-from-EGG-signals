@@ -104,34 +104,19 @@ y_test = y(rand_num(round(per*length(rand_num))+1:end),:);
 
 c = cvpartition(y_train,'k',5);
 %% feature selection
+%% with sequentialfs and criterion how wrong the prediction was
 % nfeat = 2;
 opts = statset('display','iter');
 classf = @(train_data, train_labels, test_data, test_labels)...
     sum(predict(fitcsvm(train_data, train_labels,'KernelFunction','rbf'), test_data) ~= test_labels); % how wrong the prediction was
 
+% uncomment this line for custom n feature selection and nfeat
 %  [fs, history] = sequentialfs(classf, X_train, y_train, 'cv', c, 'options', opts,'nfeatures', nfeat);
 
 [fs, history] = sequentialfs(classf, X_train, y_train, 'cv', c, ...
 'options', opts); %  % should stop when a local minimum of the criterion is found.
-%% Best hyperparameter
 
-X_train_w_best_feature = X_train(:,fs);
-
-Md1 = fitcsvm(X_train_w_best_feature,y_train,'KernelFunction','rbf','OptimizeHyperparameters','all',...
-      'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName',...
-      'expected-improvement-plus','ShowPlots',true)); % Bayes' Optimization 
-%% %% Evaluate model, final test with test set
-X_test_w_best_feature = X_test(:,fs);
-yhat =  predict(Md1,X_test_w_best_feature);
-test_accuracy_for_iter = sum(yhat == y_test)/length(y_test)*100;
-disp("Test accuracy:" + test_accuracy_for_iter);
-
-cm = confusionmat(y_test,yhat); % confusion matrix
-figure;
-confusionchart(cm);
-
-
-% %% PCA
+%% PCA 
 % 
 % nfeat =4;
 % [COEFF, SCORE, LATENT, TSQUARED, EXPLAINED, MU] = pca(X_train)
@@ -145,17 +130,36 @@ confusionchart(cm);
 % end
 % X_train = X_train_new;
 % X_test = X_test_new;
-% %% descision trees
-% 
-% Mdl = fitctree(X_train,y_train);
-% 
-% yhat =  predict(Mdl,X_test);
-% test_accuracy_for_iter = sum(yhat == y_test)/length(y_test)*100;
-% disp("Test accuracy:" + test_accuracy_for_iter);
-% 
-% cm = confusionmat(y_test,yhat); % confusion matrix
+%% Best hyperparameter
+
+X_train_w_best_feature = X_train(:,fs);
+
+Md1 = fitcsvm(X_train_w_best_feature,y_train,'KernelFunction','rbf','OptimizeHyperparameters','all',...
+      'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName',...
+      'expected-improvement-plus','ShowPlots',true)); % Bayes' Optimization 
+%% %% Evaluate model, final test with test set
+X_test_w_best_feature = X_test(:,fs);
+yhat =  predict(Md1,X_test_w_best_feature);
+test_accuracy_for_iter_svm = sum(yhat == y_test)/length(y_test)*100;
+disp("SVM test accuracy:" + test_accuracy_for_iter_svm);
+
+cm = confusionmat(y_test,yhat); % confusion matrix
 % figure;
-% confusionchart(cm);
+figure('NumberTitle', 'off', 'Name', 'SVM Confusion matrix');
+confusionchart(cm);
+
+
+
+%% Descision trees
+Mdl = fitctree(X_train,y_train);
+
+yhat1 =  predict(Mdl,X_test);
+test_accuracy_for_iter_dt = sum(yhat1 == y_test)/length(y_test)*100;
+disp("Descision trees test accuracy:" + test_accuracy_for_iter_dt);
+
+cm = confusionmat(y_test,yhat1); % confusion matrix
+figure('NumberTitle', 'off', 'Name', 'Descition Tree Confusion matrix');
+confusionchart(cm);
 
 % %% hyperplane
 % figure;
