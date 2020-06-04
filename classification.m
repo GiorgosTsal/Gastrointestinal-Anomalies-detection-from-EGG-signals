@@ -87,7 +87,7 @@ X = [avg_power; std_power; avg_main_freq; std_freq; main_power_ratio; total_max_
 
 X = X';
 y = y';
-%% Split into train and test
+%% Split into train and test 
 per = 0.65; 
 rand_num = randperm(size(X,1));
 X_train = X(rand_num(1:round(per*length(rand_num))),:);
@@ -96,22 +96,21 @@ y_train = y(rand_num(1:round(per*length(rand_num))),:);
 X_test = X(rand_num(round(per*length(rand_num))+1:end),:);
 y_test = y(rand_num(round(per*length(rand_num))+1:end),:);
 %% Cross Validation partition
-c = cvpartition(y_train,'k',5);
-%% Feature selection
-
+c = cvpartition(y_train,'k',4);
+%% ---------------Feature selection---------------
 %% with sequentialfs and criterion how wrong the prediction was
-% % nfeat = 2;
-% opts = statset('display','iter');
-% classf = @(train_data, train_labels, test_data, test_labels)...
-%     sum(predict(fitcsvm(train_data, train_labels,'KernelFunction','rbf'), test_data) ~= test_labels); % how wrong the prediction was
-% 
-% % uncomment this line for custom n feature selection and nfeat
-% %  [fs, history] = sequentialfs(classf, X_train, y_train, 'cv', c, 'options', opts,'nfeatures', nfeat);
-% 
-% [fs, history] = sequentialfs(classf, X_train, y_train, 'cv', c, ...
-% 'options', opts); %  % should stop when a local minimum of the criterion is found.
-% 
-% X_train_w_best_feature = X_train(:,fs);
+% nfeat = 2;
+opts = statset('display','iter');
+classf = @(train_data, train_labels, test_data, test_labels)...
+    sum(predict(fitcsvm(train_data, train_labels,'KernelFunction','rbf'), test_data) ~= test_labels); % how wrong the prediction was
+
+% uncomment this line for custom n feature selection and nfeat
+%  [fs, history] = sequentialfs(classf, X_train, y_train, 'cv', c, 'options', opts,'nfeatures', nfeat);
+
+[fs, history] = sequentialfs(classf, X_train, y_train, 'cv', c, ...
+'options', opts); %  % should stop when a local minimum of the criterion is found.
+
+X_train_w_best_feature = X_train(:,fs);
 %% PCA - uncomment for this way of feature selection
 % 
 % nfeat =4;
@@ -127,7 +126,7 @@ c = cvpartition(y_train,'k',5);
 % X_train = X_train_new;
 % X_test = X_test_new;
 %% Custom selection
-X_train_w_best_feature = X_train(:,5);
+% X_train_w_best_feature = X_train(:,5);
 %% Best hyperparameter
 Md1 = fitcsvm(X_train_w_best_feature,y_train,'KernelFunction','rbf','OptimizeHyperparameters','all',...
       'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName',...
@@ -139,7 +138,6 @@ test_accuracy_for_iter_svm = sum(yhat == y_test)/length(y_test)*100;
 disp("SVM test accuracy:" + test_accuracy_for_iter_svm);
 
 cm = confusionmat(y_test,yhat); % confusion matrix
-% figure;
 figure('NumberTitle', 'off', 'Name', 'SVM Confusion matrix');
 confusionchart(cm);
 %% Descision trees
@@ -151,4 +149,4 @@ disp("Descision trees test accuracy:" + test_accuracy_for_iter_dt);
 
 cm = confusionmat(y_test,yhat1); % confusion matrix
 figure('NumberTitle', 'off', 'Name', 'Descition Tree Confusion matrix');
-confusionchart(cm);
+confusionchart(cm% figure;);

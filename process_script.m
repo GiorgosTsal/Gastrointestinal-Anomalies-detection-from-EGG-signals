@@ -1,4 +1,4 @@
-%clear all; clc; close all;
+clear all; clc; close all;
 
 %% Preparing the files to read
 filelist = dir('EGG_data/*.csv'); % this returns a structure with more info than just the file names
@@ -11,7 +11,7 @@ names = replace(names,"after.csv",""); % remove ending "after.csv"
 names = replace(names,"before.csv",""); % remove ending "before.csv"
 names = unique(names); % Remove dublicates
 suffix = ["before.csv","after.csv"];
- 
+%figure; 
 %% Preprocessing steps
 
 for j=1:size(names,1)
@@ -33,12 +33,13 @@ for j=1:size(names,1)
         
         % Task No4 , bandpower examples use signal in time domain
         % No4 : Calculate bands power ratios'  mean and std value
-        [mean_band_powers(:,i,j), std_band_powers(:,i,j)] = task4(data,Fs);
+        [mean_band_powers(:,i,j), std_band_powers(:,i,j)] = task4(data,Fs) ;
+       
         
         data = abs(fft(data)); % calculate the amplitude of fft
         %data = data(1:end/2,:); % discard half to dump images of frequencies around Nyquist freq. (Fnyq = Fs/2)
         data = data(1:1.5/freq_step,:); % keep only frequencies up to 1.5Hz since the others are filtered
-        data = (data/frame).^2; % calculate the power of fft
+        data = (2*data/frame).^2; % calculate the power of fft
      
         %frequency = (0:freq_step:Fs/2-freq_step);
         frequency = (0:freq_step:1.5-freq_step); % Create frequency vector
@@ -62,17 +63,23 @@ for j=1:size(names,1)
         %No5 : Calculate total main frequency and power
         pre_data = abs(fft(pre_data)); % calculate the amplitude of fft
         L = size(pre_data,1); % Signal length
-        freq_step = Fs/L ; % Calculate the frequency step
-        pre_data = (pre_data/L).^2; % calculate the power of fft
-        pre_data = pre_data(1:1.5/freq_step,:); % keep only frequencies up to 1.5Hz since the others are filtered      
-        frequency = (0:freq_step:1.5-freq_step); % Create frequency vector
-        cpm2 = frequency' * 60; % Create cpm vector
+        freq_step2 = Fs/L ; % Calculate the frequency step
+        pre_data = (2*pre_data/L).^2; % calculate the power of fft
+        pre_data = pre_data(1:1.5/freq_step2,:); % keep only frequencies up to 1.5Hz since the others are filtered      
+        frequency2 = (0:freq_step2:1.5-freq_step2); % Create frequency vector
+        cpm2 = frequency2' * 60; % Create cpm vector
         
         [total_max_power(i,j),max_idx] = max(pre_data); % Gets the max power per frame and its index
         total_main_freq(i,j) = cpm2(max_idx); % Gets the main frequency
     end
     % No2 : find the ratio of avg_power after/before meal per patient
     main_power_ratio(j) = avg_power(2,j)/avg_power(1,j);  % after/before
+    
+    %subplot(2,size(names,1)/2,j)
+    %plot(mean_band_powers(:,:,j));
+    %plot(stomach_operations(:,:,j));
+    %plot(avg_main_freq(:,j));
+    %plot(total_main_freq(:,j));
 end
 
 %% Structure of calculated features

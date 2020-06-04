@@ -8,5 +8,5 @@ w=hanning(frame); % Creating the hanning window that will be used
 
 for i=1:k
    offset = (i-1) * step * frame; % Calculating where each frame starts at each iteration
-   Y(:,i)=X(offset+1 : offset+frame).*w;
+   Y(:,i)=X(offset+1 : offset+frame).*w; % Multiply each frame with the window
 end
